@@ -1,29 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, isNextResponse } from '@/lib/auth-helpers'
 import { z } from 'zod'
 
 const createCampaignSchema = z.object({
-  orgId: z.string().min(1),
-  name: z.string().min(1),
+  name: z.string().min(1).max(200),
   type: z.enum(['EMAIL', 'SMS', 'LINKEDIN', 'MULTI_CHANNEL']),
-  subject: z.string().optional(),
-  body: z.string().optional(),
-  fromName: z.string().optional(),
-  fromEmail: z.string().email().optional(),
+  subject: z.string().max(500).optional(),
+  body: z.string().max(50000).optional(),
+  fromName: z.string().max(100).optional(),
+  fromEmail: z.string().email().max(255).optional(),
   scheduledAt: z.string().datetime().optional(),
 })
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAuth()
+  if (isNextResponse(auth)) return auth
 
   const { searchParams } = new URL(request.url)
-  const orgId = searchParams.get('orgId')
-  if (!orgId) return NextResponse.json({ error: 'orgId required' }, { status: 400 })
+  const requestedOrgId = searchParams.get('orgId')
+  if (requestedOrgId && requestedOrgId !== auth.orgId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const campaigns = await prisma.campaign.findMany({
-    where: { orgId },
+    where: { orgId: auth.orgId },
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { enrollments: true } } },
   })
@@ -31,13 +32,23 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAuth()
+  if (isNextResponse(auth)) return auth
 
-  const body = await request.json()
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
   const parsed = createCampaignSchema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
 
-  const campaign = await prisma.campaign.create({ data: parsed.data })
+  const campaign = await prisma.campaign.create({
+    data: { ...parsed.data, orgId: auth.orgId, createdById: auth.userId },
+  })
   return NextResponse.json(campaign, { status: 201 })
 }
