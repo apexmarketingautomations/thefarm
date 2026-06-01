@@ -6,7 +6,7 @@ function createStripeClient(): Stripe | null {
     console.warn('Stripe secret key not configured')
     return null
   }
-  return new Stripe(env.STRIPE_SECRET_KEY!, { apiVersion: '2024-10-28.acacia' })
+  return new Stripe(env.STRIPE_SECRET_KEY!)
 }
 
 export const stripe = createStripeClient()

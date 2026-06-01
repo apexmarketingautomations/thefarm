@@ -36,19 +36,26 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>
 
 function validateEnv(): Env {
+  // Skip strict validation during `next build` — env vars are injected at runtime on Railway
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
+
   const parsed = envSchema.safeParse(process.env)
   if (!parsed.success) {
     const missing = parsed.error.issues
       .filter(i => i.message.includes('required') || i.code === 'invalid_type')
       .map(i => i.path.join('.'))
     if (missing.length > 0) {
-      console.error(`❌ Missing required environment variables: ${missing.join(', ')}`)
-      if (process.env.NODE_ENV === 'production') {
+      console.warn(`⚠ Missing environment variables: ${missing.join(', ')}`)
+      if (process.env.NODE_ENV === 'production' && !isBuildPhase) {
         throw new Error(`Missing required env vars: ${missing.join(', ')}`)
       }
     }
-    // Return with defaults for non-required vars in dev
-    return envSchema.parse({ ...process.env })
+    // Coerce to valid shape with empty strings for build-time evaluation
+    return envSchema.parse({
+      DATABASE_URL: 'postgresql://build:build@localhost/build',
+      NEXTAUTH_SECRET: 'build-time-placeholder',
+      ...process.env,
+    })
   }
   return parsed.data
 }
