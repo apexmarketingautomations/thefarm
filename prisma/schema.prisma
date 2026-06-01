@@ -88,6 +88,15 @@ model Organization {
   integrations Integration[]
   webhooks    Webhook[]
   sequences   Sequence[]
+  breeds      Breed[]
+  birds       Bird[]
+  flocks      Flock[]
+  hatchRecords HatchRecord[]
+  eggRecords  EggRecord[]
+  listings    Listing[]
+  farmOrders  FarmOrder[]
+  farmCustomers FarmCustomer[]
+  healthRecords HealthRecord[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -527,4 +536,311 @@ enum ActivityType {
   SEQUENCE_ENROLLED
   SEQUENCE_COMPLETED
   PAYMENT_RECEIVED
+}
+
+// ─── Farm / Poultry Models ────────────────────────────────────────────────────
+
+enum Species {
+  CHICKEN
+  DUCK
+  GOOSE
+  TURKEY
+  GUINEA_FOWL
+  QUAIL
+  OTHER
+}
+
+model Breed {
+  id          String    @id @default(cuid())
+  orgId       String
+  name        String
+  species     Species
+  description String?   @db.Text
+  color       String?
+  eggColor    String?
+  temperament String?
+  matureWeightLbs Float?
+  isRare      Boolean   @default(false)
+  isAvailable Boolean   @default(true)
+  imageUrls   String[]
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  birds       Bird[]
+  listings    Listing[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+enum BirdSex {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum BirdStatus {
+  ACTIVE
+  FOR_SALE
+  SOLD
+  DECEASED
+  GIVEN_AWAY
+  INCUBATING
+}
+
+model Bird {
+  id           String      @id @default(cuid())
+  orgId        String
+  breedId      String?
+  flockId      String?
+  bandNumber   String?
+  name         String?
+  sex          BirdSex     @default(UNKNOWN)
+  status       BirdStatus  @default(ACTIVE)
+  hatchDate    DateTime?
+  acquiredDate DateTime?
+  acquiredFrom String?
+  notes        String?     @db.Text
+  imageUrls    String[]
+  weight       Float?
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  breed        Breed?       @relation(fields: [breedId], references: [id])
+  flock        Flock?       @relation(fields: [flockId], references: [id])
+  healthRecords HealthRecord[]
+  eggRecords   EggRecord[]
+  saleItems    SaleItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([orgId])
+  @@index([breedId])
+  @@index([status])
+}
+
+enum FlockPurpose {
+  BREEDING
+  LAYING
+  MEAT
+  SHOW
+  PET
+}
+
+model Flock {
+  id          String    @id @default(cuid())
+  orgId       String
+  name        String
+  description String?
+  location    String?
+  purpose     FlockPurpose @default(BREEDING)
+  birds       Bird[]
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([orgId])
+}
+
+enum HatchStatus {
+  INCUBATING
+  LOCKDOWN
+  HATCHING
+  COMPLETE
+  FAILED
+}
+
+model HatchRecord {
+  id              String        @id @default(cuid())
+  orgId           String
+  breedId         String?
+  batchName       String
+  species         Species       @default(CHICKEN)
+  eggsSet         Int
+  eggsLaid        Int?
+  settingDate     DateTime
+  expectedHatchDate DateTime
+  actualHatchDate DateTime?
+  eggsHatched     Int?
+  eggsUnhatched   Int?
+  eggsFertile     Int?
+  chicksSurvived  Int?
+  incubatorTemp   Float?
+  incubatorHumidity Float?
+  notes           String?       @db.Text
+  status          HatchStatus   @default(INCUBATING)
+  org             Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([orgId])
+}
+
+enum EggSize {
+  PEEWEE
+  SMALL
+  MEDIUM
+  LARGE
+  EXTRA_LARGE
+  JUMBO
+}
+
+enum EggPurpose {
+  HATCHING
+  EATING
+  SELLING
+}
+
+model EggRecord {
+  id          String    @id @default(cuid())
+  orgId       String
+  birdId      String?
+  breedId     String?
+  collectedAt DateTime  @default(now())
+  count       Int       @default(1)
+  color       String?
+  size        EggSize?
+  purpose     EggPurpose @default(HATCHING)
+  notes       String?
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  bird        Bird?       @relation(fields: [birdId], references: [id])
+
+  @@index([orgId])
+}
+
+enum AgeType {
+  HATCHING_EGG
+  DAY_OLD_CHICK
+  STARTED_PULLET
+  JUVENILE
+  ADULT
+  BREEDING_PAIR
+  BREEDING_TRIO
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD_OUT
+  PAUSED
+  ARCHIVED
+}
+
+model Listing {
+  id           String        @id @default(cuid())
+  orgId        String
+  breedId      String?
+  title        String
+  description  String?       @db.Text
+  species      Species       @default(CHICKEN)
+  ageType      AgeType       @default(DAY_OLD_CHICK)
+  sex          BirdSex?
+  quantity     Int           @default(1)
+  quantityAvail Int          @default(1)
+  priceEach    Float
+  status       ListingStatus @default(ACTIVE)
+  imageUrls    String[]
+  shipsTo      String[]
+  localPickup  Boolean       @default(true)
+  org          Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  breed        Breed?        @relation(fields: [breedId], references: [id])
+  saleItems    SaleItem[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([orgId])
+  @@index([status])
+}
+
+enum OrderStatus {
+  PENDING
+  DEPOSIT_PAID
+  PAID
+  READY
+  SHIPPED
+  PICKED_UP
+  CANCELLED
+  REFUNDED
+}
+
+model FarmOrder {
+  id            String      @id @default(cuid())
+  orgId         String
+  customerId    String?
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  totalAmount   Float
+  depositAmount Float       @default(0)
+  depositPaid   Boolean     @default(false)
+  notes         String?     @db.Text
+  shippingName  String?
+  shippingEmail String?
+  shippingPhone String?
+  shippingAddr  String?
+  pickupDate    DateTime?
+  shippedAt     DateTime?
+  stripePaymentId String?
+  items         SaleItem[]
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  customer      FarmCustomer? @relation(fields: [customerId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([orgId])
+  @@index([status])
+}
+
+model SaleItem {
+  id        String    @id @default(cuid())
+  orderId   String
+  listingId String?
+  birdId    String?
+  description String
+  quantity  Int       @default(1)
+  unitPrice Float
+  order     FarmOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  listing   Listing?  @relation(fields: [listingId], references: [id])
+  bird      Bird?     @relation(fields: [birdId], references: [id])
+}
+
+model FarmCustomer {
+  id        String      @id @default(cuid())
+  orgId     String
+  name      String
+  email     String?
+  phone     String?
+  location  String?
+  notes     String?     @db.Text
+  orders    FarmOrder[]
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([orgId])
+}
+
+enum HealthRecordType {
+  VACCINATION
+  TREATMENT
+  OBSERVATION
+  INJURY
+  ILLNESS
+  DEATH
+  CHECKUP
+}
+
+model HealthRecord {
+  id          String    @id @default(cuid())
+  orgId       String
+  birdId      String
+  type        HealthRecordType
+  date        DateTime
+  description String    @db.Text
+  treatment   String?
+  vetName     String?
+  cost        Float?
+  followUpDate DateTime?
+  bird        Bird      @relation(fields: [birdId], references: [id], onDelete: Cascade)
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([birdId])
 }

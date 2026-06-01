@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'The Farm | Apex Marketing Automations',
-  description: 'Marketing automation hub — grow your pipeline',
+  title: 'Evergreen Hollow Farm | Admin',
+  description: 'Poultry & waterfowl breeder admin dashboard',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

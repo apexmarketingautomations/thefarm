@@ -14,28 +14,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-[#2d5028] to-[#3d6b35] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">The Farm</h1>
-          <p className="text-gray-500 mt-2">Apex Marketing Automations</p>
+          <div className="text-5xl mb-3">🌿</div>
+          <h1 className="text-3xl font-bold text-[#2d5028]">Evergreen Hollow Farm</h1>
+          <p className="text-[#7a5c3a] mt-2 font-medium">Admin Portal</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-[#5c3d1e] mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              className="w-full px-4 py-2.5 border border-[#e8dcc8] rounded-lg focus:ring-2 focus:ring-[#3d6b35] focus:border-transparent outline-none text-gray-800 bg-[#faf7f2]"
               placeholder="you@example.com"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+            className="w-full bg-[#3d6b35] hover:bg-[#2d5028] text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -50,10 +51,11 @@ export default function LoginPage() {
         </div>
         <button
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-          className="mt-4 w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="mt-4 w-full border border-[#e8dcc8] hover:bg-[#faf7f2] text-[#5c3d1e] font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           Sign in with Google
         </button>
+        <p className="mt-6 text-center text-xs text-gray-400">Poultry &amp; Waterfowl Breeder Admin</p>
       </div>
     </div>
   )
