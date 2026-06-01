@@ -29,6 +29,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+  GROK_API_KEY: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().default('http://localhost:3000'),
   NEXT_PUBLIC_APP_NAME: z.string().default('The Farm'),
 })
@@ -71,5 +72,6 @@ export const integrationStatus = {
   posthog: !!env.NEXT_PUBLIC_POSTHOG_KEY,
   sentry: !!env.NEXT_PUBLIC_SENTRY_DSN,
   anthropic: !!env.ANTHROPIC_API_KEY,
+  grok: !!env.GROK_API_KEY,
   google: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
 }
