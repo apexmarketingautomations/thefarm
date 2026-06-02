@@ -1,65 +1,120 @@
 import Link from 'next/link'
+import NavHeader from './nav-header'
+import ChatWidget from './chat-widget'
+import { Leaf, Mail, MapPin } from 'lucide-react'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--farm-bg)' }}>
-      <header style={{ backgroundColor: 'var(--farm-green-dark)' }} className="sticky top-0 z-40 shadow-md">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="text-2xl">🌿</span>
-            <div>
-              <p className="text-white font-bold text-base leading-tight">Evergreen Hollow Farm</p>
-              <p className="text-green-300 text-xs">Poultry & Waterfowl Breeders</p>
-            </div>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link href="/" className="text-green-200 hover:text-white transition">Home</Link>
-            <Link href="/shop" className="text-green-200 hover:text-white transition">Shop</Link>
-            <Link href="/about" className="text-green-200 hover:text-white transition">Our Birds</Link>
-            <Link href="/contact" className="text-green-200 hover:text-white transition">Contact</Link>
-          </nav>
-          <Link
-            href="/contact"
-            style={{ backgroundColor: 'var(--farm-amber)' }}
-            className="text-white text-sm font-semibold px-4 py-2 rounded-lg hover:brightness-110 transition"
-          >
-            Inquire
-          </Link>
-        </div>
-        {/* Mobile nav */}
-        <div className="md:hidden border-t border-green-800 px-4 py-2 flex gap-5 text-sm overflow-x-auto">
-          <Link href="/" className="text-green-200 hover:text-white whitespace-nowrap">Home</Link>
-          <Link href="/shop" className="text-green-200 hover:text-white whitespace-nowrap">Shop</Link>
-          <Link href="/about" className="text-green-200 hover:text-white whitespace-nowrap">Our Birds</Link>
-          <Link href="/contact" className="text-green-200 hover:text-white whitespace-nowrap">Contact</Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--cream)' }}>
+      <NavHeader />
+
+      {/* Spacer for fixed nav: topbar (38px) + main nav (74px) = 112px */}
+      <div style={{ height: 112 }} className="shrink-0" />
 
       <main className="flex-1">{children}</main>
 
-      <footer style={{ backgroundColor: 'var(--farm-green-dark)' }} className="text-green-200 mt-16">
-        <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <p className="text-white font-bold text-lg mb-2">🌿 Evergreen Hollow Farm</p>
-            <p className="text-sm leading-relaxed">Premium heritage poultry and ornamental waterfowl. NPIP-compliant. Pasture-raised. Antibiotic-free.</p>
+      <footer style={{ background: 'var(--forest-deep)', color: 'rgba(246,240,228,.62)', paddingTop: 72, paddingBottom: 30 }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div
+            className="grid gap-11 pb-12"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
+              borderBottom: '1px solid var(--line-light)',
+            }}
+          >
+            {/* Brand col */}
+            <div style={{ gridColumn: 'span 2' }} className="min-w-0">
+              <Link href="/" className="flex items-center gap-3 mb-4 w-fit">
+                <span
+                  className="flex items-center justify-center rounded-full flex-shrink-0"
+                  style={{ width: 42, height: 42, background: 'var(--forest)', border: '1.5px solid rgba(198,164,88,.5)' }}
+                >
+                  <Leaf size={20} style={{ color: 'var(--gold-soft)' }} />
+                </span>
+                <span>
+                  <span
+                    className="block text-[19px] font-semibold leading-none"
+                    style={{ fontFamily: 'var(--font-display)', color: 'var(--cream)' }}
+                  >
+                    Evergreen Hollow Farm
+                  </span>
+                  <span className="block mt-0.5 text-[9px] font-semibold tracking-[0.28em] uppercase" style={{ color: 'var(--gold)' }}>
+                    Heritage Breeder
+                  </span>
+                </span>
+              </Link>
+              <p style={{ fontSize: 14, lineHeight: 1.7, maxWidth: 290, color: 'rgba(246,240,228,.62)' }}>
+                Miniature livestock, exotic poultry & hatching eggs — ethically raised for discerning buyers.
+              </p>
+              <div className="mt-4 flex flex-col gap-2" style={{ fontSize: 13.5 }}>
+                <span className="flex items-center gap-2" style={{ color: 'rgba(246,240,228,.7)' }}>
+                  <Mail size={14} style={{ color: 'var(--gold-soft)' }} /> crivera@fjfcns.com
+                </span>
+                <span className="flex items-center gap-2" style={{ color: 'rgba(246,240,228,.7)' }}>
+                  <MapPin size={14} style={{ color: 'var(--gold-soft)' }} /> Central Florida, USA
+                </span>
+              </div>
+            </div>
+
+            {/* Animals */}
+            <div>
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-[18px]" style={{ color: 'var(--gold-soft)' }}>
+                Animals
+              </h4>
+              {['Silkies', 'Wyandottes', 'Mandarin Ducks', 'Sebastopol Geese', 'Hatching Eggs'].map(label => (
+                <Link key={label} href="/about" className="block py-1 text-[14px] transition-colors hover:opacity-100" style={{ color: 'rgba(246,240,228,.62)' }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Visit */}
+            <div>
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-[18px]" style={{ color: 'var(--gold-soft)' }}>
+                Visit
+              </h4>
+              <Link href="/about" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Our Story</Link>
+              <Link href="/shop" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Available Now</Link>
+              <Link href="/faq" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>FAQ</Link>
+              <Link href="/contact" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Contact</Link>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-[18px]" style={{ color: 'var(--gold-soft)' }}>
+                Legal
+              </h4>
+              <Link href="/policies" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Farm Policies</Link>
+              <Link href="/policies?tab=privacy" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Privacy</Link>
+              <Link href="/policies?tab=terms" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Terms</Link>
+            </div>
+
+            {/* Hours */}
+            <div>
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-[18px]" style={{ color: 'var(--gold-soft)' }}>
+                Farm Hours
+              </h4>
+              <div style={{ fontSize: 13.5, lineHeight: 2, color: 'rgba(246,240,228,.7)' }}>
+                <div><span style={{ color: 'rgba(246,240,228,.45)' }}>Tue – Fri</span> &nbsp;9:00 AM – 5:00 PM</div>
+                <div><span style={{ color: 'rgba(246,240,228,.45)' }}>Saturday</span> &nbsp;9:00 AM – 3:00 PM</div>
+                <div><span style={{ color: 'rgba(246,240,228,.45)' }}>Sun – Mon</span> &nbsp;By appointment</div>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-white font-semibold mb-3">Quick Links</p>
-            <ul className="space-y-1.5 text-sm">
-              <li><Link href="/shop" className="hover:text-white transition">Available Birds & Eggs</Link></li>
-              <li><Link href="/about" className="hover:text-white transition">Our Breeds</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition">Order & Inquiries</Link></li>
-            </ul>
+
+          <div className="flex flex-wrap justify-between items-center gap-3 pt-6" style={{ fontSize: 12.5, color: 'rgba(246,240,228,.4)' }}>
+            <span>© {new Date().getFullYear()} Evergreen Hollow Farm. All rights reserved.</span>
+            <span className="flex items-center gap-4">
+              <Link href="/login" className="transition-colors hover:opacity-80" style={{ color: 'rgba(246,240,228,.4)', fontSize: 12.5 }}>
+                Staff login
+              </Link>
+              <span>Raised by hand in Central Florida</span>
+            </span>
           </div>
-          <div>
-            <p className="text-white font-semibold mb-3">Hatching Season</p>
-            <p className="text-sm leading-relaxed">March – September. Pre-orders open year-round. Hatching eggs ship nationwide. Live birds by arrangement.</p>
-          </div>
-        </div>
-        <div className="border-t border-green-800 text-center py-4 text-xs text-green-400">
-          © {new Date().getFullYear()} Evergreen Hollow Farm · All rights reserved
         </div>
       </footer>
+
+      <ChatWidget />
     </div>
   )
 }

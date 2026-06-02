@@ -15,6 +15,8 @@ export default withAuth(
           pathname.startsWith('/shop') ||
           pathname.startsWith('/about') ||
           pathname.startsWith('/contact') ||
+          pathname.startsWith('/faq') ||
+          pathname.startsWith('/policies') ||
           pathname.startsWith('/login') ||
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/health') ||

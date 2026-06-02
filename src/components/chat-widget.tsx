@@ -1,22 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Leaf, Send, X } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-const WELCOME = `Hi there! 🌿 I'm Clover, the Evergreen Hollow Farm assistant.
+const WELCOME = `Hi! I'm Clover, the Evergreen Hollow Farm assistant.
 
-I can help you with:
-• Breeds & availability
-• Pricing & ordering
-• Hatching eggs & shipping
-• Care & husbandry questions
-• Regulations & permits
+Ask me about our animals, pricing, hatching eggs, shipping, or permits — I know everything about the farm.`
 
-What can I help you with today?`
+const CHIPS = ["What's available?", "Do you ship eggs?", "Silkie prices?", "Book a visit"]
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
@@ -30,7 +26,7 @@ export default function ChatWidget() {
   const [leadSaved, setLeadSaved] = useState(false)
   const [showLeadForm, setShowLeadForm] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -41,8 +37,8 @@ export default function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 150)
   }, [open])
 
-  const send = useCallback(async () => {
-    const text = input.trim()
+  const send = useCallback(async (preset?: string) => {
+    const text = (preset || input).trim()
     if (!text || streaming) return
 
     const userMsg: Message = { role: 'user', content: text }
@@ -51,7 +47,6 @@ export default function ChatWidget() {
     setInput('')
     setStreaming(true)
 
-    // Show lead form after 2nd user message if no email yet
     if (!leadSaved && next.filter(m => m.role === 'user').length === 2) {
       setShowLeadForm(true)
     }
@@ -76,7 +71,6 @@ export default function ChatWidget() {
         return
       }
 
-      // Stream the response
       setMessages(m => [...m, { role: 'assistant', content: '' }])
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -103,13 +97,6 @@ export default function ChatWidget() {
     }
   }, [input, messages, streaming, visitorEmail, visitorName, leadSaved])
 
-  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send()
-    }
-  }
-
   const submitLead = async () => {
     if (!visitorEmail) return
     setLeadSaved(true)
@@ -129,66 +116,126 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* FAB */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={open ? 'Close chat' : 'Chat with Clover'}
-        style={{ backgroundColor: 'var(--farm-green-dark)' }}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white text-2xl hover:brightness-110 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700"
+        className="fixed bottom-[26px] right-[26px] z-[1200] flex items-center justify-center rounded-full transition-transform duration-200 hover:scale-105"
+        style={{
+          width: 60, height: 60,
+          background: 'var(--forest)',
+          border: '1.5px solid var(--gold-soft)',
+          boxShadow: 'var(--shadow-md)',
+          cursor: 'pointer',
+        }}
       >
-        {open ? '✕' : '🌿'}
+        {open
+          ? <X size={24} style={{ color: 'var(--gold-soft)' }} />
+          : <Leaf size={25} style={{ color: 'var(--gold-soft)' }} />
+        }
       </button>
 
       {/* Chat panel */}
       {open && (
         <div
-          className="fixed bottom-24 right-5 z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-green-900/20"
-          style={{ height: '520px', backgroundColor: 'var(--farm-cream)' }}
+          className="fixed z-[1199] flex flex-col overflow-hidden"
+          style={{
+            bottom: 98, right: 26,
+            width: 370,
+            maxWidth: 'calc(100vw - 36px)',
+            height: 520,
+            maxHeight: '72vh',
+            background: 'var(--paper)',
+            borderRadius: 12,
+            border: '1px solid var(--line)',
+            boxShadow: 'var(--shadow-lg)',
+            animation: 'chatIn .3s cubic-bezier(.3,1.2,.5,1)',
+          }}
         >
           {/* Header */}
           <div
-            style={{ backgroundColor: 'var(--farm-green-dark)' }}
-            className="px-4 py-3 flex items-center gap-3"
+            className="flex items-center gap-3 px-[18px] py-4"
+            style={{ background: 'var(--forest-deep)' }}
           >
-            <span className="text-2xl">🐔</span>
+            <span
+              className="flex items-center justify-center rounded-full flex-shrink-0"
+              style={{ width: 38, height: 38, background: 'var(--forest)', border: '1.5px solid var(--gold-soft)' }}
+            >
+              <Leaf size={19} style={{ color: 'var(--gold-soft)' }} />
+            </span>
             <div>
-              <p className="text-white font-semibold text-sm leading-tight">Clover</p>
-              <p className="text-green-200 text-xs">Evergreen Hollow Farm Assistant</p>
+              <div style={{ fontWeight: 600, fontSize: 14.5, color: 'var(--cream)' }}>Clover</div>
+              <div className="flex items-center gap-1.5 mt-0.5" style={{ fontSize: 11, color: 'rgba(246,240,228,.55)' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#6FBF73', display: 'inline-block' }} />
+                Farm assistant · Always online
+              </div>
             </div>
-            <span className="ml-auto w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+          <div
+            className="flex-1 overflow-y-auto flex flex-col gap-3 px-4 py-4"
+            style={{ background: 'var(--cream)' }}
+          >
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {m.role === 'assistant' && (
-                  <span className="mr-1.5 mt-1 text-base flex-shrink-0">🌿</span>
+              <div
+                key={i}
+                className="max-w-[85%] rounded-2xl px-[15px] py-[11px] text-[14px] leading-[1.5] whitespace-pre-wrap"
+                style={
+                  m.role === 'user'
+                    ? {
+                        alignSelf: 'flex-end',
+                        background: 'var(--forest)',
+                        color: 'var(--cream)',
+                        borderBottomRightRadius: 5,
+                      }
+                    : {
+                        alignSelf: 'flex-start',
+                        background: 'var(--paper)',
+                        border: '1px solid var(--line)',
+                        color: 'var(--ink)',
+                        borderBottomLeftRadius: 5,
+                      }
+                }
+              >
+                {m.content}
+                {m.role === 'assistant' && streaming && i === messages.length - 1 && (
+                  <span
+                    className="inline-block w-1 h-3.5 ml-0.5 rounded-sm align-middle"
+                    style={{ background: 'var(--moss)', animation: 'blink 1.4s infinite both' }}
+                  />
                 )}
-                <div
-                  className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                    m.role === 'user'
-                      ? 'text-white rounded-br-sm'
-                      : 'text-gray-800 rounded-bl-sm border border-green-100'
-                  }`}
-                  style={
-                    m.role === 'user'
-                      ? { backgroundColor: 'var(--farm-green)' }
-                      : { backgroundColor: '#fff' }
-                  }
-                >
-                  {m.content}
-                  {m.role === 'assistant' && streaming && i === messages.length - 1 && (
-                    <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-green-600 animate-pulse rounded-sm align-middle" />
-                  )}
-                </div>
               </div>
             ))}
 
-            {/* Lead capture form */}
+            {/* Typing indicator */}
+            {streaming && messages[messages.length - 1]?.role === 'user' && (
+              <div
+                className="self-start flex gap-1 px-4 py-3.5 rounded-2xl"
+                style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderBottomLeftRadius: 5 }}
+              >
+                {[0, 0.2, 0.4].map((delay, i) => (
+                  <span
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: 7, height: 7,
+                      background: 'var(--moss)',
+                      animation: `blink 1.4s ${delay}s infinite both`,
+                      display: 'inline-block',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Lead capture */}
             {showLeadForm && !leadSaved && (
-              <div className="bg-white border border-green-100 rounded-2xl px-3 py-3 space-y-2">
-                <p className="text-xs text-gray-600 font-medium">
+              <div
+                className="rounded-2xl p-3 space-y-2"
+                style={{ background: 'var(--paper)', border: '1px solid var(--line)' }}
+              >
+                <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 500 }}>
                   Want follow-up from the farm? (optional)
                 </p>
                 <input
@@ -196,26 +243,29 @@ export default function ChatWidget() {
                   placeholder="Your name"
                   value={visitorName}
                   onChange={e => setVisitorName(e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-[var(--r)]"
+                  style={{ fontFamily: 'inherit', fontSize: 14, padding: '8px 12px', border: '1.5px solid var(--line)', background: 'var(--cream)', color: 'var(--ink)', outline: 'none' }}
                 />
                 <input
                   type="email"
                   placeholder="Email address"
                   value={visitorEmail}
                   onChange={e => setVisitorEmail(e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="w-full rounded-[var(--r)]"
+                  style={{ fontFamily: 'inherit', fontSize: 14, padding: '8px 12px', border: '1.5px solid var(--line)', background: 'var(--cream)', color: 'var(--ink)', outline: 'none' }}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={submitLead}
-                    style={{ backgroundColor: 'var(--farm-green)' }}
-                    className="flex-1 text-white text-xs py-1.5 rounded-lg hover:brightness-110 transition"
+                    className="flex-1 font-semibold rounded-[var(--r)] transition-all text-[12px]"
+                    style={{ background: 'var(--gold)', color: '#fff', padding: '8px 14px', border: 'none', cursor: 'pointer' }}
                   >
                     Send my info
                   </button>
                   <button
                     onClick={() => setShowLeadForm(false)}
-                    className="text-xs text-gray-400 hover:text-gray-600 px-2"
+                    className="text-[12px] px-2"
+                    style={{ color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Skip
                   </button>
@@ -226,36 +276,71 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Chips */}
+          <div
+            className="flex gap-1.5 px-3 py-2.5 overflow-x-auto"
+            style={{ borderTop: '1px solid var(--line)', background: 'var(--paper)' }}
+          >
+            {CHIPS.map(q => (
+              <button
+                key={q}
+                onClick={() => send(q)}
+                disabled={streaming}
+                className="whitespace-nowrap rounded-full text-[12px] font-medium px-3 py-1.5 flex-shrink-0 transition-colors disabled:opacity-40"
+                style={{ background: 'var(--sand)', border: '1px solid var(--line)', color: 'var(--forest-deep)', cursor: 'pointer' }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+
           {/* Input */}
           <div
-            className="px-3 py-2 border-t flex gap-2 items-end"
-            style={{ borderColor: '#e2ddd4', backgroundColor: 'var(--farm-straw)' }}
+            className="flex gap-2 px-3 py-3"
+            style={{ borderTop: '1px solid var(--line)', background: 'var(--paper)' }}
           >
-            <textarea
+            <input
               ref={inputRef}
+              type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="Ask about breeds, pricing, availability…"
-              rows={1}
+              onKeyDown={e => { if (e.key === 'Enter') send() }}
+              placeholder="Ask about our animals…"
               disabled={streaming}
-              className="flex-1 resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 disabled:opacity-60 max-h-24"
-              style={{ lineHeight: '1.4' }}
+              className="flex-1 rounded-full"
+              style={{
+                fontFamily: 'inherit', fontSize: 14,
+                border: '1.5px solid var(--line)',
+                padding: '10px 16px',
+                background: 'var(--cream)',
+                color: 'var(--ink)',
+                outline: 'none',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'var(--gold)' }}
+              onBlur={e => { e.target.style.borderColor = 'var(--line)' }}
             />
             <button
-              onClick={send}
+              onClick={() => send()}
               disabled={streaming || !input.trim()}
-              style={{ backgroundColor: 'var(--farm-green-dark)' }}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition"
               aria-label="Send"
+              className="flex items-center justify-center rounded-full flex-shrink-0 disabled:opacity-40 transition-all"
+              style={{
+                width: 42, height: 42,
+                background: 'var(--gold)',
+                border: 'none',
+                cursor: streaming || !input.trim() ? 'default' : 'pointer',
+              }}
             >
-              <svg className="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              <Send size={18} color="#fff" />
             </button>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes chatIn { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+      `}</style>
     </>
   )
 }

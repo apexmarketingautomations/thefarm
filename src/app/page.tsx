@@ -1,12 +1,8 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import PublicLayout from '@/components/public-layout'
 import { prisma } from '@/lib/prisma'
-
-async function getBreeds() {
-  try {
-    return await prisma.breed.findMany({ orderBy: { name: 'asc' }, take: 6 })
-  } catch { return [] }
-}
+import { Award, Truck, Calendar, Shield, Check, Heart, ChevronRight, Leaf, Egg } from 'lucide-react'
 
 async function getActiveListings() {
   try {
@@ -28,189 +24,836 @@ const AGE_LABEL: Record<string, string> = {
   BREEDING_TRIO: 'Breeding Trio',
 }
 
-const SPECIES_ICON: Record<string, string> = {
-  CHICKEN: '🐔',
-  DUCK: '🦆',
-  GOOSE: '🪿',
-  TURKEY: '🦃',
-  GUINEA_FOWL: '🐦',
-  OTHER: '🐦',
+const BREED_PHOTOS: Record<string, string> = {
+  'Silkie': '/farm/silkies.jpg',
+  'Black Silkie': '/farm/black-pair-show.jpg',
+  'Silver Laced Wyandotte': '/farm/hens-laced-straw.jpg',
+  "Mille Fleur d'Uccle": '/farm/chicks-golden-straw.jpg',
+  'Black Java': '/farm/black-rooster-show.jpg',
+  'Embden Goose': '/farm/white-goose.jpg',
+  'Sebastopol Goose': '/farm/white-goose.jpg',
+  'Mandarin Duck': '/farm/mandarin-duck.jpg',
 }
+const FALLBACK_PHOTO = '/farm/chicks-golden-tray.jpg'
+
+const TRUST_ITEMS = [
+  { icon: Award, label: 'Health-guaranteed birds' },
+  { icon: Leaf, label: 'Hand-raised from day one' },
+  { icon: Truck, label: 'Hatching eggs ship nationwide' },
+  { icon: Calendar, label: 'Farm visits by appointment' },
+]
+
+const CATEGORIES = [
+  {
+    label: 'Exotic Chickens',
+    note: 'Silkies, Wyandottes, d\'Uccle & more',
+    photo: '/farm/silkies.jpg',
+    href: '/about',
+  },
+  {
+    label: 'Ornamental Waterfowl',
+    note: 'Mandarin Ducks & Sebastopol Geese',
+    photo: '/farm/mandarin-duck.jpg',
+    href: '/about',
+  },
+  {
+    label: 'Hatching Eggs',
+    note: 'Ships nationwide · 80% fertility guarantee',
+    photo: '/farm/chicks-golden-tray.jpg',
+    href: '/shop',
+  },
+]
+
+const HATCH_DATES = [
+  { date: 'Jun 14', line: 'Silkie bantams', note: 'Reservations open' },
+  { date: 'Jun 28', line: 'Light Sussex', note: '3 spots left' },
+  { date: 'Jul 12', line: 'Mandarin ducklings', note: 'Waitlist only' },
+  { date: 'Jul 26', line: 'Assorted heritage', note: 'Reservations open' },
+]
+
+const FB_PHOTOS = [
+  '/farm/silkies.jpg',
+  '/farm/mandarin-duck.jpg',
+  '/farm/chicks-golden-tray.jpg',
+  '/farm/sussex-trio.jpg',
+]
+
+const TESTIMONIALS = [
+  {
+    text: 'The friendliest, healthiest birds we\'ve ever brought home. Our kids adore them, and the farm visit made the whole thing feel personal and safe.',
+    name: 'Sarah M.',
+    loc: 'Ocala, FL',
+    animal: 'Silkie Bantams',
+  },
+  {
+    text: 'Our pair arrived in beautiful condition and the drake\'s color is unreal. You can tell these birds are raised with real care.',
+    name: 'James & Linda K.',
+    loc: 'Savannah, GA',
+    animal: 'Mandarin Ducks',
+  },
+  {
+    text: 'Jasper\'s brother came from here and he\'s the gentlest soul. Honest descriptions, fair prices, and they answered every question I had.',
+    name: 'Rachel T.',
+    loc: 'Tampa, FL',
+    animal: 'Mini Donkey',
+  },
+  {
+    text: 'Best-packed hatching eggs I\'ve received from any breeder. Strong fertility and a great hatch. I\'ll be ordering again.',
+    name: 'Marcus D.',
+    loc: 'Atlanta, GA',
+    animal: 'Hatching Eggs',
+  },
+]
+
+const GALLERY_PHOTOS = [
+  '/farm/chick-hero.jpg',
+  '/farm/mandarin-duck.jpg',
+  '/farm/silkies.jpg',
+  '/farm/hens-laced-straw.jpg',
+  '/farm/chicks-golden-straw.jpg',
+  '/farm/white-goose.jpg',
+]
+
+const POLICY_ITEMS = [
+  'Availability always depends on your local, state, and federal regulations.',
+  'Hatching eggs, chicks, and live birds may carry shipping or transport restrictions.',
+  'Buyers are responsible for confirming local ownership and transport laws before purchase.',
+  'We reserve the right to decline any sale we believe to be unsafe, unhealthy, or unlawful.',
+]
+
+const FAQ = [
+  {
+    q: 'Do you ship live birds?',
+    a: 'Day-old chicks ship USPS Priority Mail Express (spring/summer). Started birds and adults prefer local pickup or we can help arrange transport. Hatching eggs ship nationwide year-round.',
+  },
+  {
+    q: 'What is your hatch rate guarantee?',
+    a: 'We guarantee 80% fertility on shipped eggs. If your hatch rate is below 50%, contact us with an incubation log and we will make it right with a partial replacement or credit.',
+  },
+  {
+    q: 'Are you NPIP certified?',
+    a: 'Yes. All our flocks are tested and certified under the National Poultry Improvement Plan (NPIP), which is required for interstate shipment of live birds and eggs.',
+  },
+  {
+    q: 'Can I visit the farm?',
+    a: 'Absolutely — we love visitors! Farm visits are Tuesday through Saturday by appointment. Use the Contact page to schedule, and we\'ll confirm a time within 24 hours.',
+  },
+]
 
 export default async function HomePage() {
-  const [breeds, listings] = await Promise.all([getBreeds(), getActiveListings()])
+  const listings = await getActiveListings()
 
   return (
     <PublicLayout>
-      {/* Hero */}
+      {/* ─── HERO ─────────────────────────────────────────── */}
       <section
-        className="relative py-24 px-4 text-center overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, var(--farm-green-dark) 0%, var(--farm-green) 60%, #4e8a44 100%)' }}
+        className="relative"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1.05fr 1fr',
+          minHeight: 'calc(100vh - 112px)',
+        }}
       >
-        <div className="relative max-w-3xl mx-auto">
-          <span className="inline-block bg-white/10 text-green-200 text-xs font-semibold px-3 py-1 rounded-full mb-4 tracking-wide uppercase">
-            NPIP Certified · Pasture Raised · Antibiotic Free
-          </span>
-          <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-4">
-            Heritage Poultry &<br />Ornamental Waterfowl
-          </h1>
-          <p className="text-green-100 text-lg md:text-xl mb-8 leading-relaxed">
-            Rare and heritage breeds raised with care on our family farm. Silkies, Wyandottes, Mandarins, Sebastopols, and more — hatching eggs, chicks, and breeding pairs.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href="/shop"
-              style={{ backgroundColor: 'var(--farm-amber)' }}
-              className="text-white font-bold px-8 py-3.5 rounded-xl hover:brightness-110 transition text-base shadow-lg"
+        {/* Text side */}
+        <div
+          className="flex flex-col justify-center"
+          style={{
+            padding: 'clamp(64px,8vw,120px) 56px clamp(64px,8vw,80px) max(40px, calc((100vw - 1240px)/2 + 40px))',
+            background: 'var(--cream)',
+          }}
+        >
+          <div style={{ maxWidth: 540 }}>
+            <span
+              className="inline-flex items-center gap-2.5 mb-5 text-[12px] font-semibold uppercase tracking-[0.22em]"
+              style={{ color: 'var(--gold)' }}
             >
-              Shop Available Birds
+              <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+              Miniature Livestock & Exotic Poultry
+            </span>
+            <h1
+              className="leading-[1.05] tracking-[-0.01em] mb-6"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 500,
+                color: 'var(--ink)',
+                fontSize: 'clamp(40px,5.6vw,74px)',
+              }}
+            >
+              Exceptional livestock,{' '}
+              <em style={{ fontStyle: 'italic', color: 'var(--gold)', fontWeight: 500 }}>rare poultry,</em>{' '}
+              and ethical breeding.
+            </h1>
+            <p
+              className="mb-8"
+              style={{
+                fontSize: 'clamp(17px,1.5vw,20px)',
+                color: 'var(--ink-soft)',
+                lineHeight: 1.7,
+              }}
+            >
+              Showcasing miniature livestock, exotic poultry, hatching eggs, and carefully raised animals for discerning buyers.
+            </p>
+            <div className="flex flex-wrap gap-3.5">
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  fontSize: 13, letterSpacing: '0.04em',
+                  padding: '14px 26px',
+                  background: 'var(--forest)', color: 'var(--cream)',
+                  border: '1.5px solid transparent',
+                }}
+              >
+                <Leaf size={16} /> View Available Birds
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  fontSize: 13, letterSpacing: '0.04em',
+                  padding: '14px 26px',
+                  background: 'transparent', color: 'var(--forest)',
+                  border: '1.5px solid var(--line)',
+                }}
+              >
+                <Calendar size={16} /> Contact Us
+              </Link>
+            </div>
+            {/* Stats */}
+            <div
+              className="flex flex-wrap gap-[38px] mt-14 pt-8"
+              style={{ borderTop: '1px solid var(--line)' }}
+            >
+              {[
+                { n: '8+', l: 'Breeds & species' },
+                { n: 'NPIP', l: '100% health documented' },
+                { n: '80%', l: 'Egg fertility guarantee' },
+              ].map(({ n, l }) => (
+                <div key={l}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 30, color: 'var(--forest-deep)', lineHeight: 1 }}>{n}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 5, letterSpacing: '0.02em' }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Image side */}
+        <div className="relative overflow-hidden" style={{ background: 'var(--sand-deep)', minHeight: 500 }}>
+          <Image
+            src="/farm/chick-hero.jpg"
+            alt="A hand-raised chick at Evergreen Hollow Farm"
+            fill
+            className="object-cover"
+            style={{ objectPosition: 'center 38%' }}
+            priority
+            sizes="50vw"
+          />
+          <div
+            className="absolute left-6 bottom-6 flex items-center gap-2 rounded-full px-4 py-2"
+            style={{
+              background: 'rgba(252,249,242,.9)',
+              backdropFilter: 'blur(6px)',
+              fontSize: 12,
+              color: 'var(--forest-deep)',
+              fontWeight: 500,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <Heart size={14} fill="true" style={{ color: 'var(--gold)' }} />
+            Raised gentle, handled daily
+          </div>
+        </div>
+
+        {/* Mobile layout override */}
+        <style>{`
+          @media (max-width: 880px) {
+            .hero-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </section>
+
+      {/* ─── TRUST STRIP ──────────────────────────────────── */}
+      <section style={{ background: 'var(--forest)', color: 'var(--cream)' }}>
+        <div
+          className="max-w-[1240px] mx-auto px-10 py-[22px] flex flex-wrap justify-between gap-6"
+        >
+          {TRUST_ITEMS.map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-[11px]" style={{ fontSize: 13.5, color: 'rgba(246,240,228,.9)' }}>
+              <Icon size={19} style={{ color: 'var(--gold-soft)', flexShrink: 0 }} />
+              {label}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── WHAT WE RAISE ────────────────────────────────── */}
+      <section className="max-w-[1240px] mx-auto px-10" style={{ padding: 'clamp(64px,8vw,118px) 40px' }}>
+        <div className="text-center" style={{ maxWidth: 660, margin: '0 auto 52px' }}>
+          <span
+            className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+            style={{ color: 'var(--gold)' }}
+          >
+            <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+            What we raise
+          </span>
+          <h2
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--ink)', lineHeight: 1.05, marginTop: 16 }}
+          >
+            A small farm,{' '}
+            <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>thoughtfully</em>{' '}
+            stocked
+          </h2>
+          <p style={{ fontSize: 'clamp(17px,1.5vw,20px)', color: 'var(--ink-soft)', lineHeight: 1.7, marginTop: 18 }}>
+            We focus on a handful of species we truly love — and raise each one with the time and attention it deserves.
+          </p>
+        </div>
+
+        <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.label}
+              href={c.href}
+              className="relative rounded-[var(--r)] overflow-hidden flex items-end cursor-pointer"
+              style={{ aspectRatio: '3/3.4', display: 'flex', alignItems: 'flex-end' }}
+            >
+              <Image
+                src={c.photo}
+                alt={c.label}
+                fill
+                className="object-cover transition-transform duration-500 hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+              {/* Gradient overlay */}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, rgba(16,28,21,.86) 4%, rgba(16,28,21,.18) 46%, transparent 70%)' }}
+              />
+              <div className="relative z-10 p-[22px] text-center w-full flex flex-col items-center gap-1.5" style={{ color: 'var(--cream)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 21, fontWeight: 500, lineHeight: 1.1 }}>{c.label}</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(246,240,228,.72)', marginTop: 4 }}>{c.note}</div>
+                <span className="mt-2.5 text-[12px] font-semibold tracking-[0.06em] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--gold-soft)' }}>
+                  Browse <ChevronRight size={14} />
+                </span>
+              </div>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── AVAILABLE NOW ────────────────────────────────── */}
+      {listings.length > 0 && (
+        <section style={{ background: 'var(--cream)', padding: 'clamp(64px,8vw,118px) 0' }}>
+          <div className="max-w-[1240px] mx-auto px-10">
+            <div className="flex items-end justify-between gap-5 flex-wrap mb-11">
+              <div>
+                <span
+                  className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                  style={{ color: 'var(--gold)' }}
+                >
+                  <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+                  Available now
+                </span>
+                <h2
+                  style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--ink)', lineHeight: 1.05, marginTop: 16 }}
+                >
+                  Ready for their{' '}
+                  <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>forever homes</em>
+                </h2>
+              </div>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-1.5 font-semibold text-[13px] tracking-[0.04em] transition-all hover:-translate-y-0.5 rounded-[var(--r)]"
+                style={{ padding: '14px 26px', background: 'transparent', color: 'var(--forest)', border: '1.5px solid var(--line)' }}
+              >
+                See all available <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+              {listings.map(l => {
+                const photo = BREED_PHOTOS[l.breed?.name ?? ''] ?? FALLBACK_PHOTO
+                return (
+                  <article
+                    key={l.id}
+                    className="rounded-[var(--r)] overflow-hidden transition-all duration-300 hover:-translate-y-1.5"
+                    style={{ background: 'var(--paper)', border: '1px solid var(--line)', boxShadow: 'var(--shadow-sm)' }}
+                  >
+                    <div className="relative overflow-hidden" style={{ aspectRatio: '4/3.2', background: 'var(--sand-deep)' }}>
+                      <Image
+                        src={photo}
+                        alt={l.breed?.name ?? 'Bird'}
+                        fill
+                        className="object-cover transition-transform duration-500 hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 25vw"
+                      />
+                      <span
+                        className="absolute top-3.5 left-3.5 text-[10.5px] font-bold tracking-[0.1em] uppercase flex items-center gap-1.5 rounded-full px-[11px] py-[5px]"
+                        style={{
+                          background: 'rgba(94,114,87,.16)',
+                          color: '#3c5a3a',
+                          backdropFilter: 'blur(4px)',
+                          boxShadow: 'var(--shadow-sm)',
+                        }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        Available
+                      </span>
+                    </div>
+                    <div style={{ padding: '22px 24px 24px' }}>
+                      <div style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', fontWeight: 600 }}>
+                        {l.breed?.species?.replace('_', ' ').toLowerCase() ?? 'poultry'}
+                      </div>
+                      <div className="flex justify-between items-baseline gap-3 mt-2 mb-1">
+                        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 23, fontWeight: 500, color: 'var(--forest-deep)', lineHeight: 1.1 }}>
+                          {l.breed?.name ?? 'Bird'}
+                        </h3>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--ink)', whiteSpace: 'nowrap', textAlign: 'right' }}>
+                          ${Number(l.priceEach).toFixed(0)}
+                          <span className="block" style={{ fontFamily: 'var(--font-sans)', fontSize: 10.5, color: 'var(--ink-faint)', letterSpacing: '0.02em', fontWeight: 500 }}>
+                            / {l.ageType === 'HATCHING_EGG' ? 'dozen' : 'each'}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12.5, color: 'var(--ink-faint)', marginBottom: 14 }}>
+                        {AGE_LABEL[l.ageType] ?? l.ageType} · {l.quantityAvail} available
+                      </div>
+                      <div
+                        className="flex items-center justify-between pt-3.5"
+                        style={{ borderTop: '1px solid var(--line)' }}
+                      >
+                        <Link
+                          href="/shop"
+                          className="inline-flex items-center gap-1.5 font-semibold text-[13px] tracking-[0.04em]"
+                          style={{ color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          View details <ChevronRight size={15} />
+                        </Link>
+                        <Link
+                          href={`/contact?bird=${encodeURIComponent(l.breed?.name ?? 'bird')}&type=${encodeURIComponent(AGE_LABEL[l.ageType] ?? l.ageType)}`}
+                          className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+                          style={{ fontSize: 12, padding: '10px 18px', background: 'var(--gold)', color: '#fff', border: '1.5px solid transparent' }}
+                        >
+                          Request
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── FARM STORY SPLIT ─────────────────────────────── */}
+      <section
+        style={{
+          background: 'linear-gradient(155deg,#1B2F23,#16271D 60%,#112017)',
+          padding: 'clamp(64px,8vw,118px) 0',
+          color: 'var(--cream)',
+        }}
+      >
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div
+            className="grid items-center"
+            style={{ gridTemplateColumns: '1fr 1fr', gap: 'clamp(40px,6vw,84px)' }}
+          >
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-5 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold-soft)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold-soft)' }} />
+                Our philosophy
+              </span>
+              <h2
+                style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--cream)', lineHeight: 1.05, marginTop: 16, marginBottom: 18 }}
+              >
+                Raised the{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>right way</em>{' '}
+                — start to finish
+              </h2>
+              <p style={{ fontSize: 'clamp(17px,1.5vw,20px)', color: 'rgba(246,240,228,.74)', lineHeight: 1.7 }}>
+                Evergreen Hollow is a family operation built on one belief: animals deserve exceptional care from the moment they hatch to the day they go home. We&apos;re breeders first, deeply invested in every bird in our pens.
+              </p>
+              <div className="flex flex-wrap gap-[30px] my-8">
+                {[
+                  { icon: Award, title: 'Documented health', desc: 'Vaccinated & dewormed where appropriate' },
+                  { icon: Heart, title: 'Daily handling', desc: 'Calm, people-friendly birds' },
+                  { icon: Shield, title: '7-day guarantee', desc: 'On pre-existing conditions' },
+                ].map(({ icon: Icon, title, desc }) => (
+                  <div key={title} className="flex gap-3 items-start" style={{ maxWidth: 200 }}>
+                    <Icon size={22} style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--cream)' }}>{title}</div>
+                      <div style={{ fontSize: 12.5, color: 'rgba(246,240,228,.6)', marginTop: 2 }}>{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+                style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--gold)', color: '#fff', border: '1.5px solid transparent' }}
+              >
+                Read our story <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            {/* Story collage */}
+            <div
+              className="grid gap-3.5"
+              style={{ gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', aspectRatio: '1/1.04' }}
+            >
+              <div className="row-span-2 relative rounded-[var(--r)] overflow-hidden">
+                <Image src="/farm/game-rooster-grey.jpg" alt="Grey game cock" fill className="object-cover" sizes="25vw" />
+              </div>
+              <div className="relative rounded-[var(--r)] overflow-hidden">
+                <Image src="/farm/silkies.jpg" alt="Silkie bantams" fill className="object-cover" sizes="25vw" />
+              </div>
+              <div className="relative rounded-[var(--r)] overflow-hidden">
+                <Image src="/farm/chicks-golden-straw.jpg" alt="Golden chicks" fill className="object-cover" sizes="25vw" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── GALLERY STRIP ────────────────────────────────── */}
+      <section style={{ background: 'var(--paper)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div className="flex justify-between items-end flex-wrap gap-5 mb-9">
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+                From the farm
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--ink)', lineHeight: 1.05, marginTop: 16 }}>
+                Lately at the{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>hollow</em>
+              </h2>
+            </div>
             <Link
               href="/about"
-              className="bg-white/15 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/25 transition text-base border border-white/20"
+              className="inline-flex items-center gap-1.5 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+              style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'transparent', color: 'var(--forest)', border: '1.5px solid var(--line)' }}
             >
-              Meet Our Breeds
+              Meet our birds <ChevronRight size={16} />
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Trust bar */}
-      <section style={{ backgroundColor: 'var(--farm-straw)' }} className="border-y border-amber-200">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex flex-wrap justify-center gap-6 md:gap-12 text-sm font-medium" style={{ color: 'var(--farm-brown)' }}>
-          <span className="flex items-center gap-2">✅ NPIP Certified</span>
-          <span className="flex items-center gap-2">🌿 No Antibiotics</span>
-          <span className="flex items-center gap-2">🚚 Ships Nationwide</span>
-          <span className="flex items-center gap-2">🥚 Hatching Eggs Available</span>
-          <span className="flex items-center gap-2">🏆 Show-Quality Genetics</span>
-        </div>
-      </section>
-
-      {/* Featured Breeds */}
-      {breeds.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--farm-green-dark)' }}>Our Breeds</h2>
-            <p className="text-gray-500">Heritage genetics, exceptional quality</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {breeds.map(b => (
-              <div
-                key={b.id}
-                className="rounded-2xl p-5 border hover:shadow-md transition-shadow"
-                style={{ backgroundColor: 'var(--farm-cream)', borderColor: '#e8dfc8' }}
-              >
-                <div className="text-3xl mb-2">{SPECIES_ICON[b.species] ?? '🐦'}</div>
-                <p className="font-bold text-base" style={{ color: 'var(--farm-green-dark)' }}>{b.name}</p>
-                <p className="text-xs text-gray-500 capitalize mt-0.5">{b.species.replace('_', ' ').toLowerCase()}</p>
-                {b.description && (
-                  <p className="text-sm text-gray-600 mt-2 leading-snug line-clamp-2">{b.description}</p>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/about" className="text-sm font-semibold hover:underline" style={{ color: 'var(--farm-green)' }}>
-              Learn about all our breeds →
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* How It Works */}
-      <section style={{ backgroundColor: 'var(--farm-straw)' }} className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-10" style={{ color: 'var(--farm-green-dark)' }}>How to Order</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: '🔍', step: '1. Browse', desc: 'Explore available birds, hatching eggs, and breeding pairs in our shop.' },
-              { icon: '💬', step: '2. Inquire', desc: 'Contact us or chat with Clover — our AI farm assistant — to confirm availability and reserve your birds.' },
-              { icon: '🚚', step: '3. Ship or Pick Up', desc: 'Hatching eggs ship USPS Priority Mail nationwide. Live birds by local pickup or arrangement.' },
-            ].map(item => (
-              <div key={item.step} className="text-center p-6 rounded-2xl bg-white shadow-sm border border-amber-100">
-                <div className="text-4xl mb-3">{item.icon}</div>
-                <p className="font-bold text-base mb-2" style={{ color: 'var(--farm-green-dark)' }}>{item.step}</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+          <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
+            {GALLERY_PHOTOS.map((src, i) => (
+              <div key={i} className="relative rounded-[var(--r)] overflow-hidden" style={{ aspectRatio: '1', background: 'var(--sand-deep)' }}>
+                <Image
+                  src={src}
+                  alt="Farm photo"
+                  fill
+                  className="object-cover transition-transform duration-500 hover:scale-105"
+                  sizes="(max-width: 768px) 33vw, 16vw"
+                  loading="lazy"
+                />
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Available Now */}
-      {listings.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold" style={{ color: 'var(--farm-green-dark)' }}>Available Now</h2>
-              <p className="text-gray-500 text-sm mt-1">Fresh from the hatchery</p>
-            </div>
-            <Link href="/shop" className="text-sm font-semibold hover:underline" style={{ color: 'var(--farm-green)' }}>
-              View all →
-            </Link>
+      {/* ─── TESTIMONIALS ─────────────────────────────────── */}
+      <section style={{ background: 'var(--cream)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div className="text-center mb-12" style={{ maxWidth: 660, margin: '0 auto 48px' }}>
+            <span
+              className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+              style={{ color: 'var(--gold)' }}
+            >
+              <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+              Kind words
+            </span>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--ink)', lineHeight: 1.05, marginTop: 16 }}>
+              Trusted by families{' '}
+              <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>across the South</em>
+            </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {listings.map(l => (
+          <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+            {TESTIMONIALS.map((t) => (
               <div
-                key={l.id}
-                className="rounded-2xl border overflow-hidden hover:shadow-lg transition-shadow"
-                style={{ backgroundColor: 'var(--farm-cream)', borderColor: '#e8dfc8' }}
+                key={t.name}
+                className="rounded-[var(--r)] p-[30px] relative"
+                style={{ background: 'var(--paper)', border: '1px solid var(--line)' }}
               >
-                <div
-                  className="h-32 flex items-center justify-center text-5xl"
-                  style={{ backgroundColor: 'var(--farm-straw)' }}
-                >
-                  {SPECIES_ICON[l.breed?.species ?? ''] ?? '🐦'}
-                </div>
-                <div className="p-4">
-                  <p className="font-bold text-sm" style={{ color: 'var(--farm-green-dark)' }}>{l.breed?.name ?? 'Bird'}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{AGE_LABEL[l.ageType] ?? l.ageType}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="font-bold text-base" style={{ color: 'var(--farm-amber)' }}>
-                      ${Number(l.priceEach).toFixed(0)}{l.ageType === 'HATCHING_EGG' ? '/dz' : '/ea'}
-                    </span>
-                    <span className="text-xs text-gray-400">Qty: {l.quantityAvail}</span>
-                  </div>
-                  <Link
-                    href="/contact"
-                    style={{ backgroundColor: 'var(--farm-green)' }}
-                    className="block text-center text-white text-xs font-semibold py-2 rounded-lg mt-3 hover:brightness-110 transition"
+                <div style={{ color: 'var(--gold)', fontSize: 15, letterSpacing: 2 }}>★★★★★</div>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: 17, lineHeight: 1.55, color: 'var(--ink)', margin: '16px 0 20px', fontStyle: 'italic' }}>
+                  &ldquo;{t.text}&rdquo;
+                </p>
+                <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid var(--line)' }}>
+                  <div
+                    className="flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{
+                      width: 40, height: 40,
+                      background: 'var(--forest)',
+                      color: 'var(--gold-soft)',
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 16,
+                    }}
                   >
-                    Inquire
-                  </Link>
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--forest-deep)' }}>{t.name}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{t.loc} · {t.animal}</div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* Empty state placeholder */}
-      {listings.length === 0 && breeds.length === 0 && (
-        <section className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <p className="text-5xl mb-4">🌱</p>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--farm-green-dark)' }}>Season Opening Soon</h2>
-          <p className="text-gray-500 mb-6">We are getting the flock ready. Contact us to get on our waitlist.</p>
-          <Link href="/contact" style={{ backgroundColor: 'var(--farm-green)' }} className="inline-block text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition">
-            Join the Waitlist
-          </Link>
-        </section>
-      )}
+      {/* ─── POLICY ───────────────────────────────────────── */}
+      <section style={{ background: 'var(--cream)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div
+            className="overflow-hidden rounded-[10px]"
+            style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr' }}
+          >
+            <div style={{ padding: 'clamp(38px,5vw,60px)', background: 'var(--forest-deep)', color: 'var(--cream)' }}>
+              <span
+                className="inline-flex items-center gap-2 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold-soft)' }}
+              >
+                <Shield size={15} /> Trust & Responsibility
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(26px,3vw,40px)', color: 'var(--cream)', lineHeight: 1.05, margin: '16px 0 14px' }}>
+                Responsible Animal Sales & Hatching Policy
+              </h2>
+              <p style={{ fontSize: 'clamp(17px,1.5vw,20px)', color: 'rgba(246,240,228,.74)', lineHeight: 1.7 }}>
+                We care deeply about where our animals go and that every sale is done the right way — legally, ethically, and with the bird&apos;s welfare first.
+              </p>
+              <p style={{ fontSize: 12.5, color: 'rgba(246,240,228,.5)', marginTop: 26, fontStyle: 'italic', lineHeight: 1.6 }}>
+                This section is provided for general information only and is not legal advice. Please consult your local authorities about the rules that apply to you.
+              </p>
+            </div>
+            <div style={{ padding: 'clamp(38px,5vw,60px)', background: 'var(--forest)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <ul className="flex flex-col gap-[18px] mt-2">
+                {POLICY_ITEMS.map((item) => (
+                  <li key={item} className="flex gap-3.5 items-start" style={{ color: 'rgba(246,240,228,.86)', fontSize: 14.5, lineHeight: 1.55 }}>
+                    <Check size={20} style={{ color: 'var(--gold-soft)', flexShrink: 0, marginTop: 2 }} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* CTA Banner */}
+      {/* ─── FAQ ──────────────────────────────────────────── */}
+      <section style={{ background: 'var(--paper)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div className="grid gap-12 items-start" style={{ gridTemplateColumns: '1fr 1.4fr' }}>
+            <div style={{ position: 'sticky', top: 130 }}>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+                Common questions
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--ink)', lineHeight: 1.05, marginTop: 16, marginBottom: 18 }}>
+                Things people often{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>wonder about</em>
+              </h2>
+              <p style={{ color: 'var(--ink-soft)', lineHeight: 1.7, fontSize: 15 }}>
+                Don&apos;t see your question? Chat with Clover (the 🌿 button) or send us a message.
+              </p>
+              <Link
+                href="/contact"
+                className="mt-6 inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+                style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--forest)', color: 'var(--cream)', border: '1.5px solid transparent' }}
+              >
+                Ask us directly <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div style={{ borderTop: '1px solid var(--line)' }}>
+              {FAQ.map((item) => (
+                <details
+                  key={item.q}
+                  className="group"
+                  style={{ borderBottom: '1px solid var(--line)' }}
+                >
+                  <summary
+                    className="flex justify-between items-center gap-6 py-6 cursor-pointer list-none"
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'clamp(18px,2vw,21px)',
+                      color: 'var(--forest-deep)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {item.q}
+                    <ChevronRight size={22} style={{ color: 'var(--gold)', flexShrink: 0 }} className="group-open:rotate-90 transition-transform duration-300" />
+                  </summary>
+                  <p style={{ padding: '0 60px 26px 0', color: 'var(--ink-soft)', fontSize: 15, lineHeight: 1.7 }}>
+                    {item.a}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── HATCH DATES ──────────────────────────────────── */}
       <section
-        className="mx-4 mb-16 rounded-3xl py-12 px-6 text-center"
-        style={{ background: 'linear-gradient(135deg, var(--farm-green-dark), var(--farm-green))' }}
+        style={{
+          background: 'linear-gradient(155deg,#1B2F23,#16271D 60%,#112017)',
+          padding: 'clamp(48px,6vw,84px) 0',
+        }}
       >
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Ready to start your flock?</h2>
-        <p className="text-green-200 mb-6 text-base">Talk to Clover — our AI farm assistant — or send us a message and we will get back to you within 24 hours.</p>
-        <Link
-          href="/contact"
-          style={{ backgroundColor: 'var(--farm-amber)' }}
-          className="inline-block text-white font-bold px-8 py-3.5 rounded-xl hover:brightness-110 transition shadow-lg"
-        >
-          Get in Touch
-        </Link>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div className="flex justify-between items-end flex-wrap gap-5 mb-9">
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold-soft)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold-soft)' }} />
+                Mark your calendar
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--cream)', lineHeight: 1.05, marginTop: 16 }}>
+                Upcoming{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>hatch dates</em>
+              </h2>
+            </div>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+              style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--gold)', color: '#fff', border: '1.5px solid transparent' }}
+            >
+              <Calendar size={16} /> Reserve from a hatch
+            </Link>
+          </div>
+          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {HATCH_DATES.map((h) => (
+              <div
+                key={h.date}
+                className="rounded-[8px] p-[22px]"
+                style={{ background: 'rgba(246,240,228,.06)', border: '1px solid var(--line-light)' }}
+              >
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--gold-soft)', lineHeight: 1 }}>{h.date}</div>
+                <div style={{ color: 'var(--cream)', fontWeight: 600, fontSize: 15.5, margin: '10px 0 8px' }}>{h.line}</div>
+                <div className="inline-flex items-center gap-1.5" style={{ fontSize: 12.5, color: 'rgba(246,240,228,.6)' }}>
+                  <Egg size={13} style={{ color: 'var(--gold-soft)' }} /> {h.note}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FACEBOOK BLOCK ───────────────────────────────── */}
+      <section style={{ background: 'var(--paper)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div
+            className="grid items-center"
+            style={{ gridTemplateColumns: '1fr 1fr', gap: 'clamp(30px,5vw,64px)' }}
+          >
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+                Follow along
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(26px,3vw,38px)', color: 'var(--ink)', lineHeight: 1.05, margin: '14px 0 12px' }}>
+                See daily updates on{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>Facebook</em>
+              </h2>
+              <p style={{ color: 'var(--ink-soft)', fontSize: 15.5, lineHeight: 1.7, marginBottom: 22, maxWidth: 420 }}>
+                New arrivals, hatch announcements, and everyday farm life — posted first to our Facebook page. Message us there anytime.
+              </p>
+              <a
+                href="https://www.facebook.com/share/14ntg1jdkuJ/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+                style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--forest)', color: 'var(--cream)', border: '1.5px solid transparent' }}
+              >
+                Visit our page
+              </a>
+            </div>
+            <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              {FB_PHOTOS.map((src, i) => (
+                <a
+                  key={i}
+                  href="https://www.facebook.com/share/14ntg1jdkuJ/?mibextid=wwXIfr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative block rounded-[8px] overflow-hidden"
+                  style={{ aspectRatio: '1', background: 'var(--sand-deep)' }}
+                >
+                  <Image
+                    src={src}
+                    alt="Facebook post"
+                    fill
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 20vw"
+                    loading="lazy"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA BANNER ───────────────────────────────────── */}
+      <section
+        style={{
+          background: 'linear-gradient(155deg,#1B2F23,#16271D 60%,#112017)',
+          padding: 'clamp(64px,8vw,118px) 0',
+          color: 'var(--cream)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div className="max-w-[720px] mx-auto px-10 text-center" style={{ position: 'relative', zIndex: 2 }}>
+          <span
+            className="inline-flex items-center gap-2.5 mb-5 text-[12px] font-semibold uppercase tracking-[0.22em] justify-center"
+            style={{ color: 'var(--gold-soft)' }}
+          >
+            <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold-soft)' }} />
+            Limited availability
+          </span>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--cream)', lineHeight: 1.05, margin: '18px 0 16px' }}>
+            Ready to find your{' '}
+            <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>perfect bird?</em>
+          </h2>
+          <p style={{ fontSize: 'clamp(17px,1.5vw,20px)', color: 'rgba(246,240,228,.74)', lineHeight: 1.7, marginBottom: 32 }}>
+            Browse what&apos;s available now, or contact us and meet the flock. Every animal leaves with full health records and our personal guarantee.
+          </p>
+          <div className="flex justify-center gap-3.5 flex-wrap">
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+              style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--gold)', color: '#fff', border: '1.5px solid transparent' }}
+            >
+              <Calendar size={16} /> View Available Birds
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+              style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'rgba(246,240,228,.1)', color: 'var(--cream)', border: '1.5px solid rgba(246,240,228,.35)' }}
+            >
+              Contact Us <ChevronRight size={16} />
+            </Link>
+          </div>
+        </div>
       </section>
     </PublicLayout>
   )
