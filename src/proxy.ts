@@ -11,10 +11,15 @@ export default withAuth(
         const { pathname } = req.nextUrl
         // Public paths — no auth required
         if (
+          pathname === '/' ||
+          pathname.startsWith('/shop') ||
+          pathname.startsWith('/about') ||
+          pathname.startsWith('/contact') ||
           pathname.startsWith('/login') ||
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/health') ||
-          pathname.startsWith('/api/webhooks')
+          pathname.startsWith('/api/webhooks') ||
+          pathname.startsWith('/api/chat')
         ) {
           return true
         }
