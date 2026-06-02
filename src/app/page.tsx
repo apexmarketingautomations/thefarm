@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import PublicLayout from '@/components/public-layout'
 import { prisma } from '@/lib/prisma'
-import { Award, Truck, Calendar, Shield, Check, Heart, ChevronRight, Leaf } from 'lucide-react'
+import { Award, Truck, Calendar, Shield, Check, Heart, ChevronRight, Leaf, Egg } from 'lucide-react'
 
 async function getActiveListings() {
   try {
@@ -64,30 +64,44 @@ const CATEGORIES = [
   },
 ]
 
+const HATCH_DATES = [
+  { date: 'Jun 14', line: 'Silkie bantams', note: 'Reservations open' },
+  { date: 'Jun 28', line: 'Light Sussex', note: '3 spots left' },
+  { date: 'Jul 12', line: 'Mandarin ducklings', note: 'Waitlist only' },
+  { date: 'Jul 26', line: 'Assorted heritage', note: 'Reservations open' },
+]
+
+const FB_PHOTOS = [
+  '/farm/silkies.jpg',
+  '/farm/mandarin-duck.jpg',
+  '/farm/chicks-golden-tray.jpg',
+  '/farm/sussex-trio.jpg',
+]
+
 const TESTIMONIALS = [
   {
-    text: 'We got a trio of Silkies last spring and they are the most gentle, family-friendly birds. The kids adore them.',
-    name: 'Rachel M.',
+    text: 'The friendliest, healthiest birds we\'ve ever brought home. Our kids adore them, and the farm visit made the whole thing feel personal and safe.',
+    name: 'Sarah M.',
+    loc: 'Ocala, FL',
+    animal: 'Silkie Bantams',
+  },
+  {
+    text: 'Our pair arrived in beautiful condition and the drake\'s color is unreal. You can tell these birds are raised with real care.',
+    name: 'James & Linda K.',
+    loc: 'Savannah, GA',
+    animal: 'Mandarin Ducks',
+  },
+  {
+    text: 'Jasper\'s brother came from here and he\'s the gentlest soul. Honest descriptions, fair prices, and they answered every question I had.',
+    name: 'Rachel T.',
     loc: 'Tampa, FL',
-    animal: 'Silkies',
+    animal: 'Mini Donkey',
   },
   {
-    text: 'Hatching eggs arrived perfectly packed. 9 out of 12 hatched — incredible! Will order again for sure.',
-    name: 'David K.',
+    text: 'Best-packed hatching eggs I\'ve received from any breeder. Strong fertility and a great hatch. I\'ll be ordering again.',
+    name: 'Marcus D.',
     loc: 'Atlanta, GA',
-    animal: 'Wyandotte Hatching Eggs',
-  },
-  {
-    text: 'The Mandarin pair is stunning. They came healthy, vibrant, and settled into our pond immediately.',
-    name: 'Lena T.',
-    loc: 'Orlando, FL',
-    animal: 'Mandarin Duck Pair',
-  },
-  {
-    text: 'Asked a dozen questions before buying and they answered every one. Real breeders who actually care.',
-    name: 'James R.',
-    loc: 'Nashville, TN',
-    animal: 'Black Java Cockerel',
+    animal: 'Hatching Eggs',
   },
 ]
 
@@ -154,7 +168,7 @@ export default async function HomePage() {
               style={{ color: 'var(--gold)' }}
             >
               <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
-              Heritage Poultry & Exotic Waterfowl
+              Miniature Livestock & Exotic Poultry
             </span>
             <h1
               className="leading-[1.05] tracking-[-0.01em] mb-6"
@@ -165,9 +179,9 @@ export default async function HomePage() {
                 fontSize: 'clamp(40px,5.6vw,74px)',
               }}
             >
-              Rare birds,{' '}
-              <em style={{ fontStyle: 'italic', color: 'var(--gold)', fontWeight: 500 }}>raised by hand</em>{' '}
-              on a family farm.
+              Exceptional livestock,{' '}
+              <em style={{ fontStyle: 'italic', color: 'var(--gold)', fontWeight: 500 }}>rare poultry,</em>{' '}
+              and ethical breeding.
             </h1>
             <p
               className="mb-8"
@@ -177,7 +191,7 @@ export default async function HomePage() {
                 lineHeight: 1.7,
               }}
             >
-              From mandarin ducks to silkie bantams and fresh hatching eggs — thoughtfully bred, beautifully cared for, and ready for the right home.
+              Showcasing miniature livestock, exotic poultry, hatching eggs, and carefully raised animals for discerning buyers.
             </p>
             <div className="flex flex-wrap gap-3.5">
               <Link
@@ -687,6 +701,111 @@ export default async function HomePage() {
                     {item.a}
                   </p>
                 </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── HATCH DATES ──────────────────────────────────── */}
+      <section
+        style={{
+          background: 'linear-gradient(155deg,#1B2F23,#16271D 60%,#112017)',
+          padding: 'clamp(48px,6vw,84px) 0',
+        }}
+      >
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div className="flex justify-between items-end flex-wrap gap-5 mb-9">
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold-soft)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold-soft)' }} />
+                Mark your calendar
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(30px,3.8vw,52px)', color: 'var(--cream)', lineHeight: 1.05, marginTop: 16 }}>
+                Upcoming{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>hatch dates</em>
+              </h2>
+            </div>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+              style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--gold)', color: '#fff', border: '1.5px solid transparent' }}
+            >
+              <Calendar size={16} /> Reserve from a hatch
+            </Link>
+          </div>
+          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {HATCH_DATES.map((h) => (
+              <div
+                key={h.date}
+                className="rounded-[8px] p-[22px]"
+                style={{ background: 'rgba(246,240,228,.06)', border: '1px solid var(--line-light)' }}
+              >
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--gold-soft)', lineHeight: 1 }}>{h.date}</div>
+                <div style={{ color: 'var(--cream)', fontWeight: 600, fontSize: 15.5, margin: '10px 0 8px' }}>{h.line}</div>
+                <div className="inline-flex items-center gap-1.5" style={{ fontSize: 12.5, color: 'rgba(246,240,228,.6)' }}>
+                  <Egg size={13} style={{ color: 'var(--gold-soft)' }} /> {h.note}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FACEBOOK BLOCK ───────────────────────────────── */}
+      <section style={{ background: 'var(--paper)', padding: 'clamp(64px,8vw,118px) 0' }}>
+        <div className="max-w-[1240px] mx-auto px-10">
+          <div
+            className="grid items-center"
+            style={{ gridTemplateColumns: '1fr 1fr', gap: 'clamp(30px,5vw,64px)' }}
+          >
+            <div>
+              <span
+                className="inline-flex items-center gap-2.5 mb-4 text-[12px] font-semibold uppercase tracking-[0.22em]"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span className="block w-[26px] h-px opacity-60" style={{ background: 'var(--gold)' }} />
+                Follow along
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(26px,3vw,38px)', color: 'var(--ink)', lineHeight: 1.05, margin: '14px 0 12px' }}>
+                See daily updates on{' '}
+                <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>Facebook</em>
+              </h2>
+              <p style={{ color: 'var(--ink-soft)', fontSize: 15.5, lineHeight: 1.7, marginBottom: 22, maxWidth: 420 }}>
+                New arrivals, hatch announcements, and everyday farm life — posted first to our Facebook page. Message us there anytime.
+              </p>
+              <a
+                href="https://www.facebook.com/share/14ntg1jdkuJ/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-semibold rounded-[var(--r)] transition-all hover:-translate-y-0.5"
+                style={{ fontSize: 13, letterSpacing: '0.04em', padding: '14px 26px', background: 'var(--forest)', color: 'var(--cream)', border: '1.5px solid transparent' }}
+              >
+                Visit our page
+              </a>
+            </div>
+            <div className="grid gap-3.5" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              {FB_PHOTOS.map((src, i) => (
+                <a
+                  key={i}
+                  href="https://www.facebook.com/share/14ntg1jdkuJ/?mibextid=wwXIfr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative block rounded-[8px] overflow-hidden"
+                  style={{ aspectRatio: '1', background: 'var(--sand-deep)' }}
+                >
+                  <Image
+                    src={src}
+                    alt="Facebook post"
+                    fill
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 20vw"
+                    loading="lazy"
+                  />
+                </a>
               ))}
             </div>
           </div>

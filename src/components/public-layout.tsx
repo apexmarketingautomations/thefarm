@@ -75,7 +75,18 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </h4>
               <Link href="/about" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Our Story</Link>
               <Link href="/shop" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Available Now</Link>
-              <Link href="/contact" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Contact & FAQ</Link>
+              <Link href="/faq" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>FAQ</Link>
+              <Link href="/contact" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Contact</Link>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-[18px]" style={{ color: 'var(--gold-soft)' }}>
+                Legal
+              </h4>
+              <Link href="/policies" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Farm Policies</Link>
+              <Link href="/policies?tab=privacy" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Privacy</Link>
+              <Link href="/policies?tab=terms" className="block py-1 text-[14px] transition-colors" style={{ color: 'rgba(246,240,228,.62)' }}>Terms</Link>
             </div>
 
             {/* Hours */}
